@@ -29,7 +29,39 @@
 
 #include <genericworker.h>
 #include <innermodel/innermodel.h>
+template <typename T>
+struct Target
+{
+  T content;
+  std::mutex mymutex;
+  bool activate = false;
 
+  void put(const T &data)
+  {
+    std::lock_guard<std::mutex> guard(mymutex);
+    content = data;   // generic type must be copy-constructable
+    activate = true;
+  }
+  std::optional<T> get()
+  {
+    std::lock_guard<std::mutex> guard(mymutex);
+    if(activate)
+       return content;
+    else
+       return {};
+  }  
+  void set_task_finished()
+ {
+    std::lock_guard<std::mutex> guard(mymutex);
+    activate = false;
+ }
+};
+
+struct coordenada
+{
+   float x;
+   float z;
+};
 class SpecificWorker : public GenericWorker
 {
 Q_OBJECT
@@ -48,7 +80,8 @@ public slots:
 private:
 	std::shared_ptr < InnerModel > innerModel;
 	bool startup_check_flag;
-
+   bool click=false;
+   Target <coordenada> objetivo;
 };
 
 #endif

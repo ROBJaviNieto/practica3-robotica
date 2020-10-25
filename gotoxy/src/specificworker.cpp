@@ -21,6 +21,7 @@
 /**
 * \brief Default constructor
 */
+
 SpecificWorker::SpecificWorker(TuplePrx tprx, bool startup_check) : GenericWorker(tprx)
 {
 	this->startup_check_flag = startup_check;
@@ -71,6 +72,28 @@ void SpecificWorker::initialize(int period)
 
 void SpecificWorker::compute()
 {
+	coordenada coordenadas;
+	RoboCompGenericBase::TBaseState bState;
+	differentialrobot_proxy->getBaseState(bState);
+	float CRX,CRZ;
+	if(objetivo.get()){
+		//me muevo
+		coordenadas=objetivo.get().value();
+		if((CRX=(coordenadas.x-bState.x))==0 && (CRZ=(coordenadas.x-bState.x))==0){
+			objetivo.set_task_finished();
+		}
+		else{
+			if(click){
+				//cambio de direccion
+				int algo=0;
+			}
+			else{
+				//sigo
+				int algo=0;
+			}
+		}
+	}
+
 	//computeCODE
 	//QMutexLocker locker(mutex);
 	//try
@@ -99,7 +122,11 @@ int SpecificWorker::startup_check()
 void SpecificWorker::RCISMousePicker_setPick(RoboCompRCISMousePicker::Pick myPick)
 {
 //subscribesToCODE
-
+	printf("X:%f ,Y:%f , Z:%f\n",myPick.x,myPick.y,myPick.z);
+	coordenada coor;
+	coor.x=myPick.x; coor.z=myPick.z;
+	objetivo.put(coor);
+	click=true;
 }
 
 
