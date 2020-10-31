@@ -72,26 +72,49 @@ void SpecificWorker::initialize(int period)
 
 void SpecificWorker::compute()
 {
-	coordenada coordenadas;
 	RoboCompGenericBase::TBaseState bState;
 	differentialrobot_proxy->getBaseState(bState);
-	float CRX,CRZ;
-	if(objetivo.get()){
+	//float rot;
+
+	if( auto target_o = objetivo.get(); target_o.has_value())
+	{
+		auto target = target_o.value();
+		Eigen:: Vector2f target2 (target.x,target.z);
+		Eigen:: Vector2f rw (bState.x,bState.z);
+		Eigen:: Matrix2f rot;
+		rot<<cos(bState.alpha),-sin(bState.alpha),sin(bState.alpha),cos(bState.alpha);
+		auto tr = rot*(target2-rw);
+		auto beta = atan2(tr[0],tr[1]);
+		auto dist =tr.norm();
+		cout<<"alfa "<<bState.alpha<<" beta "<<beta<<" distancia "<<dist<<endl;
+		differentialrobot_proxy->setSpeedBase(0,beta);
+		usleep(1000000);
+		int iteracciones=dist/1000;
+		for (int i = 0; i < iteracciones; i++){
+			differentialrobot_proxy->setSpeedBase(1000,0);
+			usleep(1000000);
+		}
+		differentialrobot_proxy->setSpeedBase(dist-iteracciones*1000,0);
+		usleep(1000000);
+		differentialrobot_proxy->setSpeedBase(0,0);
 		//me muevo
-		coordenadas=objetivo.get().value();
-		if((CRX=(coordenadas.x-bState.x))==0 && (CRZ=(coordenadas.x-bState.x))==0){
+		/*rot = atan2((target.x-bState.x),(target.z-bState.z));
+		printf("%f\n",rot);
+		if((CRX=(target.x-bState.x))==0 && (CRZ=(target.z-bState.z))==0){
 			objetivo.set_task_finished();
 		}
 		else{
 			if(click){
 				//cambio de direccion
+				differentialrobot_proxy->setSpeedBase(0,rot);
+				
 				int algo=0;
 			}
 			else{
 				//sigo
 				int algo=0;
 			}
-		}
+		}*/
 	}
 
 	//computeCODE

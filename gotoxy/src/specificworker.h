@@ -29,25 +29,29 @@
 
 #include <genericworker.h>
 #include <innermodel/innermodel.h>
+#include <Eigen/Dense>
 template <typename T>
 struct Target
 {
   T content;
   std::mutex mymutex;
   bool activate = false;
+  bool full = false;
 
   void put(const T &data)
   {
     std::lock_guard<std::mutex> guard(mymutex);
     content = data;   // generic type must be copy-constructable
     activate = true;
+    full = true;
   }
   std::optional<T> get()
   {
     std::lock_guard<std::mutex> guard(mymutex);
-    if(activate)
+    if(activate && full){
+       full = false;
        return content;
-    else
+    }else
        return {};
   }  
   void set_task_finished()
